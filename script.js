@@ -161,9 +161,21 @@ const productData = [
     ["50 Items", "137_50_Items.jpeg", "Combo Packs"],
     ["60 Items", "138_60_Items.jpeg", "Combo Packs"],
     ["70 Items", "139_70_Items.jpeg", "Combo Packs"],
-    ["4000 COMBO", "140_4000_COMBO.jpg", "Combo Packs"],
-    ["6500 COMBO", "141_6500_COMBO.jpg", "Combo Packs"]
-];  // PDF prices: [Actual Price, Discount/Offer Price]
+["4000 COMBO", "140_4000_COMBO.jpeg", "Combo Packs"],
+["6500 COMBO", "141_6500_COMBO.jpg", "Combo Packs"],
+
+["28 Chorsa", "142_28_Chorsa.jpeg", "Wala / Garland Crackers"],
+["28 Giant", "143_28_Giant.jpeg", "Wala / Garland Crackers"],
+["100 Wala", "144_100_Wala.jpeg", "Wala / Garland Crackers"],
+["56 Giant", "145_56_Giant.jpeg", "Wala / Garland Crackers"],
+["24 Deluxe", "146_24_Deluxe.jpeg", "Wala / Garland Crackers"],
+["50 Deluxe", "147_50_Deluxe.jpeg", "Wala / Garland Crackers"],
+["1000 Wala", "148_1000_Wala.jpeg", "Wala / Garland Crackers"],
+["100 Deluxe", "149_100_Deluxe.jpeg", "Wala / Garland Crackers"],
+["2000 Wala", "150_2000_Wala.jpeg", "Wala / Garland Crackers"],
+["5000 Wala", "151_5000_Wala.jpeg", "Wala / Garland Crackers"],
+["10000 Wala", "152_10000_Wala.jpeg", "Wala / Garland Crackers"]
+]; // PDF prices: [Actual Price, Discount/Offer Price]
 // Prices will be increased by 25% and rounded to nearest ₹5.
 
 const pdfPrices = [
@@ -307,7 +319,18 @@ const pdfPrices = [
     [14000, 1400], // 138
     [17000, 1700], // 139
     [4000, null], // 140
-    [6500, null]  // 141
+    [6500, null],  // 141
+    [150, 15],     // 142 - 28 Chorsa
+    [250, 25],     // 143 - 28 Giant
+    [450, 45],     // 144 - 100 Wala
+    [450, 45],     // 145 - 56 Giant
+    [500, 50],     // 146 - 24 Deluxe
+    [1000, 100],   // 147 - 50 Deluxe
+    [2000, 200],   // 148 - 1000 Wala
+    [2200, 220],   // 149 - 100 Deluxe
+    [4000, 400],   // 150 - 2000 Wala
+    [9000, 900],   // 151 - 5000 Wala
+    [18000, 1800]  // 152 - 10000 Wala
 ];
 
 // Increase prices by 25% and round to nearest ₹5
@@ -526,8 +549,20 @@ const categoryMap = {
     137: "Combo Packs",
     138: "Combo Packs",
     139: "Combo Packs",
-    140: "Combo Packs",
-    141: "Combo Packs"
+140:"Combo Packs",
+141:"Combo Packs",
+
+142:"Wala / Garland Crackers",
+143:"Wala / Garland Crackers",
+144:"Wala / Garland Crackers",
+145:"Wala / Garland Crackers",
+146:"Wala / Garland Crackers",
+147:"Wala / Garland Crackers",
+148:"Wala / Garland Crackers",
+149:"Wala / Garland Crackers",
+150:"Wala / Garland Crackers",
+151:"Wala / Garland Crackers",
+152:"Wala / Garland Crackers"
 };
 
 const products = productData.map((item, index) => ({
@@ -649,7 +684,7 @@ if (productCount) {
 >
 
     ${
-    product.id >= 133
+    product.id >= 133 && product.id <= 141
     ? `<span class="product-badge combo-badge">🎁 COMBO</span>`
     : product.id <= 23
         ? `<span class="product-badge popular-badge">🔥 POPULAR</span>`
@@ -1399,7 +1434,7 @@ function filterCategory(category) {
             (
                 onclickText.includes("'" + category + "'") ||
                 (category === "all" &&
-                 onclickText.includes("'all'"))
+                onclickText.includes("'all'"))
             )
         ) {
             button.classList.add("active");
@@ -1439,7 +1474,8 @@ function updateCategoryCounts() {
         "Sky Shots",
         "Fancy Crackers",
         "Special Crackers",
-        "Combo Packs"
+        "Combo Packs",
+        "Wala / Garland Crackers"
     ];
 
     // Total products
