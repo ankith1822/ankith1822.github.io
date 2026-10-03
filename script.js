@@ -761,39 +761,41 @@ if (productCount) {
                 </div>
 
 
-                <div class="product-cart-row">
+<div class="product-cart-row">
 
-                    <div class="product-quantity">
+    <div class="product-quantity">
 
-                        <button
-                            onclick="changeProductQuantity(${product.id}, -1)"
-                        >
-                            −
-                        </button>
+        <button
+            type="button"
+            onclick="changeProductQuantity(${product.id}, -1)"
+            aria-label="Decrease quantity"
+        >−</button>
 
+        <input
+    type="number"
+    id="product-qty-${product.id}"
+    value="1"
+    min="1"
+    onchange="productQuantities[${product.id}] = Math.max(1, parseInt(this.value) || 1)"
+    oninput="productQuantities[${product.id}] = Math.max(1, parseInt(this.value) || 1)"
+>
 
-                        <span id="product-qty-${product.id}">
-                            1
-                        </span>
+        <button
+            type="button"
+            onclick="changeProductQuantity(${product.id}, 1)"
+            aria-label="Increase quantity"
+        >+</button>
 
+    </div>
 
-                        <button
-                            onclick="changeProductQuantity(${product.id}, 1)"
-                        >
-                            +
-                        </button>
+    <button
+        class="add-cart"
+        onclick="addProductWithQuantity(${product.id})"
+    >
+        🛒 Add
+    </button>
 
-                    </div>
-
-
-                    <button
-                        class="add-cart"
-                        onclick="addProductWithQuantity(${product.id})"
-                    >
-                        🛒 Add
-                    </button>
-
-                </div>
+</div>
 
             </div>
         `;
@@ -817,28 +819,19 @@ function changeProductQuantity(productId, change) {
         productQuantities[productId] = 1;
     }
 
-
     productQuantities[productId] += change;
-
 
     if (productQuantities[productId] < 1) {
         productQuantities[productId] = 1;
     }
 
-
     const quantityElement =
-        document.getElementById(
-            `product-qty-${productId}`
-        );
-
+        document.getElementById(`product-qty-${productId}`);
 
     if (quantityElement) {
-
-        quantityElement.textContent =
+        quantityElement.value =
             productQuantities[productId];
-
     }
-
 }
 
 
