@@ -8425,3 +8425,56 @@ button:active,
         z-index: 9999 !important;
     }
 }
+/* ===== PRICE LIST BUTTON ===== */
+
+.price-list-button {
+    display: block;
+    width: fit-content;
+    margin: 15px auto;
+    padding: 12px 24px;
+
+    background: #d90429;
+    color: white;
+
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 700;
+
+    border-radius: 8px;
+
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+
+    transition: 0.2s ease;
+}
+
+.price-list-button:hover {
+    background: #b00320;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 600px) {
+
+    .price-list-button {
+        width: calc(100% - 30px);
+        text-align: center;
+        box-sizing: border-box;
+        margin: 12px auto;
+        padding: 11px 15px;
+        font-size: 15px;
+    }
+
+}
+/* ===== PRICE LIST NAV BUTTON ===== */
+
+.navbar nav a[href*="ANUGRAHA_Crackers"] {
+    background: #ffd700;
+    color: #222 !important;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+.navbar nav a[href*="ANUGRAHA_Crackers"]:hover {
+    background: white;
+    color: #8b0000 !important;
+}
