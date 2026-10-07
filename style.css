@@ -8478,3 +8478,138 @@ button:active,
     background: white;
     color: #8b0000 !important;
 }
+/* =========================================
+   CART SCROLL FIX - DESKTOP
+   ========================================= */
+
+.cart-modal {
+    overscroll-behavior: contain !important;
+}
+
+.cart-layout {
+    min-height: 0 !important;
+}
+
+.cart-products {
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+
+
+
+/* Keep cart header and checkout area fixed */
+.cart-header,
+.cart-footer {
+    flex-shrink: 0;
+}
+
+/* Better scrollbar on desktop */
+.cart-items::-webkit-scrollbar {
+    width: 7px;
+}
+
+.cart-items::-webkit-scrollbar-thumb {
+    background: #999;
+    border-radius: 10px;
+}
+
+.cart-items::-webkit-scrollbar-track {
+    background: transparent;
+}
+/* =========================================================
+   ANUGRAHA FINAL CART SCROLL FIX
+   Desktop / Mac Safari
+   ========================================================= */
+
+@media screen and (min-width: 701px) {
+
+    /* Give the cart a REAL fixed height so the grid can scroll. */
+    .cart-box {
+        height: 90vh !important;
+        max-height: 90vh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+
+    /* Header stays fixed; this becomes the fixed-height scrolling area. */
+    .cart-layout {
+        display: grid !important;
+        grid-template-columns: 1.4fr 1fr !important;
+        height: calc(90vh - 76px) !important;
+        max-height: calc(90vh - 76px) !important;
+        min-height: 0 !important;
+        flex: 1 1 auto !important;
+        overflow: hidden !important;
+    }
+
+    /* LEFT: this is the ONLY product area that scrolls. */
+    .cart-products {
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: 100% !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior: contain !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: auto !important;
+    }
+
+    /* The actual product list must be allowed to grow inside the scroller. */
+    #cart-items {
+        min-height: 0 !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    /* RIGHT: keep checkout visible; scroll only if its form becomes too tall. */
+    .cart-checkout {
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: 100% !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    /* Make the Mac/Safari scrollbar easy to see. */
+    .cart-products::-webkit-scrollbar,
+    .cart-checkout::-webkit-scrollbar {
+        width: 9px;
+    }
+
+    .cart-products::-webkit-scrollbar-thumb,
+    .cart-checkout::-webkit-scrollbar-thumb {
+        background: #aaaaaa;
+        border-radius: 10px;
+    }
+
+    .cart-products::-webkit-scrollbar-track,
+    .cart-checkout::-webkit-scrollbar-track {
+        background: #f3f3f3;
+    }
+}
+
+/* Keep the existing mobile cart behaviour unchanged. */
+@media screen and (max-width: 700px) {
+    .cart-box {
+        height: auto !important;
+        max-height: 95vh !important;
+    }
+
+    .cart-layout {
+        height: auto !important;
+        max-height: calc(95vh - 70px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    .cart-products {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+}

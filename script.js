@@ -1188,6 +1188,10 @@ function removeFromCart(index) {
 // OPEN CART
 // ==========================================
 
+// ==========================================
+// OPEN CART
+// ==========================================
+
 function openCart() {
 
     const cartModal =
@@ -1197,6 +1201,8 @@ function openCart() {
 
         cartModal.classList.add("active");
 
+        // LOCK BACKGROUND PAGE SCROLL
+        document.body.style.overflow = "hidden";
     }
 }
 
@@ -1214,6 +1220,8 @@ function closeCart() {
 
         cartModal.classList.remove("active");
 
+        // RESTORE BACKGROUND PAGE SCROLL
+        document.body.style.overflow = "";
     }
 }
 
