@@ -1473,12 +1473,6 @@ async function buildAnugrahaInvoicePDF(customer, invoiceLines, subtotal, deliver
     doc.text("Subtotal", pageWidth - 65, y);
     doc.text(rupees(subtotal), pageWidth - margin, y, { align: "right" });
     y += 6;
-    doc.setTextColor(...muted);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text("Delivery Charge (7%)", pageWidth - 65, y);
-    doc.text(rupees(deliveryCharge), pageWidth - margin, y, { align: "right" });
-    y += 7;
     doc.setFillColor(...burgundy);
     doc.roundedRect(pageWidth - 91, y - 1, 77, 13, 2, 2, "F");
     doc.setTextColor(255, 255, 255);
@@ -1687,12 +1681,11 @@ async function orderWhatsApp() {
 
 
     const subtotal = grandTotal;
-    const deliveryCharge = Math.round(subtotal * 0.07);
-    grandTotal = subtotal + deliveryCharge;
+    const deliveryCharge = 0;
+    grandTotal = subtotal;
 
     message += `Subtotal: ₹${subtotal}\n`;
-    message += `Delivery Charge (7%): ₹${deliveryCharge}\n`;
-    message += `Grand Total (including delivery): ₹${grandTotal}\n\n`;
+    message += `Grand Total: ₹${grandTotal}\n\n`;
 
     message += "Please confirm my order.\n";
     message += "Thank you! 🙏";

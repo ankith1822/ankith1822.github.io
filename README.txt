@@ -12,6 +12,7 @@ Changes:
   images/Anugraha Diwali Fireworks Logo.png
 - Keeps payee Ankith A, UPI anugrahacrackers@ybl, Kotak Bank.
 - Keeps invoice PDF generation and WhatsApp order sharing.
+- Removes delivery charges; grand total equals the product subtotal in the PDF and WhatsApp message.
 - Payment remains marked PENDING until manually verified.
 
 Install:
