@@ -8628,3 +8628,9 @@ button:active,
     font-size: 12px;
     line-height: 1.5;
 }
+
+
+/* Hide the fixed bottom View Cart bar while the cart modal is open. */
+body.cart-modal-open .mobile-cart-bar {
+    display: none !important;
+}

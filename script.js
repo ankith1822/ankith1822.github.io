@@ -1200,6 +1200,7 @@ function openCart() {
     if (cartModal) {
 
         cartModal.classList.add("active");
+        document.body.classList.add("cart-modal-open");
 
         // LOCK BACKGROUND PAGE SCROLL
         document.body.style.overflow = "hidden";
@@ -1219,6 +1220,7 @@ function closeCart() {
     if (cartModal) {
 
         cartModal.classList.remove("active");
+        document.body.classList.remove("cart-modal-open");
 
         // RESTORE BACKGROUND PAGE SCROLL
         document.body.style.overflow = "";
@@ -1325,7 +1327,7 @@ function amountInWordsIndian(amount) {
     return parts.join(" ").replace(/\s+/g, " ").trim() + " Rupees Only";
 }
 
-async function buildAnugrahaInvoicePDF(customer, invoiceLines, grandTotal, invoiceNo) {
+async function buildAnugrahaInvoicePDF(customer, invoiceLines, subtotal, deliveryCharge, grandTotal, invoiceNo) {
     if (!window.jspdf || !window.jspdf.jsPDF) {
         alert("Invoice PDF library could not load. Please check your internet connection and try again.");
         return false;
@@ -1469,7 +1471,13 @@ async function buildAnugrahaInvoicePDF(customer, invoiceLines, grandTotal, invoi
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.text("Subtotal", pageWidth - 65, y);
-    doc.text(rupees(grandTotal), pageWidth - margin, y, { align: "right" });
+    doc.text(rupees(subtotal), pageWidth - margin, y, { align: "right" });
+    y += 6;
+    doc.setTextColor(...muted);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text("Delivery Charge (7%)", pageWidth - 65, y);
+    doc.text(rupees(deliveryCharge), pageWidth - margin, y, { align: "right" });
     y += 7;
     doc.setFillColor(...burgundy);
     doc.roundedRect(pageWidth - 91, y - 1, 77, 13, 2, 2, "F");
@@ -1646,7 +1654,7 @@ async function orderWhatsApp() {
     message += "-------------------------\n\n";
 
 
-    let grandTotal = 0;
+    let grandTotal = 0; // product subtotal before delivery
 
 
     cart.forEach((item, index) => {
@@ -1678,7 +1686,13 @@ async function orderWhatsApp() {
     });
 
 
-    message += `Grand Total: ₹${grandTotal}\n\n`;
+    const subtotal = grandTotal;
+    const deliveryCharge = Math.round(subtotal * 0.07);
+    grandTotal = subtotal + deliveryCharge;
+
+    message += `Subtotal: ₹${subtotal}\n`;
+    message += `Delivery Charge (7%): ₹${deliveryCharge}\n`;
+    message += `Grand Total (including delivery): ₹${grandTotal}\n\n`;
 
     message += "Please confirm my order.\n";
     message += "Thank you! 🙏";
@@ -1721,7 +1735,7 @@ async function orderWhatsApp() {
         phone: customerPhone,
         location: customerLocation,
         address: customerAddress
-    }, invoiceLines, grandTotal, invoiceNo);
+    }, invoiceLines, subtotal, deliveryCharge, grandTotal, invoiceNo);
 
     if (!invoiceFileResult) return;
 
