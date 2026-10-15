@@ -1236,7 +1236,348 @@ function closeCart() {
 // WHATSAPP ORDER
 // ==========================================
 
-function orderWhatsApp() {
+
+// ==========================================
+// ANUGRAHA AUTOMATIC PDF INVOICE + UPI DETAILS
+// Uses the existing cart and product catalogue.
+// Payment is always marked PENDING until manually verified.
+// ==========================================
+
+const ANUGRAHA_PAYMENT = {
+    payee: "Ankith A",
+    upiId: "anugrahacrackers@ybl",
+    bank: "Kotak Bank",
+    phone: "9449683125",
+    location: "Mangalore, Karnataka",
+};
+
+async function loadAnugrahaLogoDataURL() {
+    // Use the exact logo already stored in the website's images folder.
+    // If it cannot load, the invoice still generates with a clean text brand header.
+    const logoPath = "./images/Anugraha Diwali Fireworks Logo.png";
+    try {
+        const response = await fetch(logoPath, { cache: "no-cache" });
+        if (!response.ok) throw new Error("Logo request failed: " + response.status);
+        const blob = await response.blob();
+        return await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : null);
+            reader.onerror = () => reject(new Error("Unable to read logo image"));
+            reader.readAsDataURL(blob);
+        });
+    } catch (error) {
+        console.warn("Anugraha logo could not be embedded; generating invoice without logo.", error);
+        return null;
+    }
+}
+
+function anugrahaInvoiceNumber() {
+    // Client-generated reference for WhatsApp orders (not a central accounting sequence).
+    const now = new Date();
+    const datePart = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, "0"),
+        String(now.getDate()).padStart(2, "0")
+    ].join("");
+    const timePart = String(now.getTime()).slice(-6);
+    return `AN-${datePart}-${timePart}`;
+}
+
+function rupees(value) {
+    return "Rs. " + Number(value || 0).toLocaleString("en-IN", {
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 0
+    });
+}
+
+function amountInWordsIndian(amount) {
+    const n = Math.round(Number(amount) || 0);
+    if (n === 0) return "Zero Rupees Only";
+    const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+        "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen",
+        "Eighteen", "Nineteen"];
+    const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+    function underThousand(num) {
+        let out = "";
+        if (num >= 100) {
+            out += ones[Math.floor(num / 100)] + " Hundred ";
+            num %= 100;
+        }
+        if (num >= 20) {
+            out += tens[Math.floor(num / 10)] + " ";
+            num %= 10;
+        }
+        if (num > 0) out += ones[num] + " ";
+        return out.trim();
+    }
+    let remaining = n;
+    const groups = [
+        [10000000, "Crore"], [100000, "Lakh"], [1000, "Thousand"], [1, ""]
+    ];
+    const parts = [];
+    for (const [size, label] of groups) {
+        if (remaining >= size) {
+            const count = Math.floor(remaining / size);
+            parts.push(underThousand(count) + (label ? " " + label : ""));
+            remaining %= size;
+        }
+    }
+    return parts.join(" ").replace(/\s+/g, " ").trim() + " Rupees Only";
+}
+
+async function buildAnugrahaInvoicePDF(customer, invoiceLines, grandTotal, invoiceNo) {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert("Invoice PDF library could not load. Please check your internet connection and try again.");
+        return false;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 14;
+    const burgundy = [128, 18, 49];
+    const gold = [201, 145, 45];
+    const ink = [29, 35, 52];
+    const muted = [95, 102, 115];
+    const dateLabel = new Date().toLocaleDateString("en-IN", {
+        day: "2-digit", month: "short", year: "numeric"
+    });
+    const totalItems = invoiceLines.reduce((sum, line) => sum + line.qty, 0);
+    const logoData = await loadAnugrahaLogoDataURL();
+
+    if (typeof doc.autoTable !== "function") {
+        console.error("jsPDF AutoTable plugin is not loaded.");
+        alert("The invoice table could not load. Please refresh the website and try again.");
+        return false;
+    }
+
+    // Header
+    doc.setFillColor(...burgundy);
+    doc.rect(0, 0, pageWidth, 36, "F");
+    doc.setFillColor(...gold);
+    doc.rect(0, 36, pageWidth, 2, "F");
+    if (logoData) {
+        try {
+            doc.addImage(logoData, "PNG", margin, 5, 23, 23, undefined, "FAST");
+        } catch (e) {
+            console.warn("Logo image format was not supported by PDF renderer.", e);
+        }
+    }
+    const brandX = logoData ? margin + 28 : margin;
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("ANUGRAHA CRACKERS", brandX, 13);
+    doc.setFontSize(8);
+    doc.setTextColor(255, 236, 205);
+    doc.setFont("helvetica", "normal");
+    doc.text("PREMIUM CRACKERS  |  DIRECT FROM SIVAKASI", brandX, 20);
+    doc.text("Phone: " + ANUGRAHA_PAYMENT.phone + "  |  " + ANUGRAHA_PAYMENT.location, brandX, 27);
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("INVOICE", pageWidth - margin, 14, { align: "right" });
+    doc.setTextColor(255, 224, 164);
+    doc.setFontSize(13);
+    doc.text(invoiceNo, pageWidth - margin, 21, { align: "right" });
+    doc.setTextColor(255, 236, 205);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text(dateLabel, pageWidth - margin, 27, { align: "right" });
+
+    doc.setDrawColor(...gold);
+    doc.setLineWidth(0.7);
+    doc.line(margin, 41, pageWidth - margin, 41);
+
+    // Customer and payment cards
+    const cardY = 46, cardH = 29, gap = 6;
+    const cardW = (pageWidth - margin * 2 - gap) / 2;
+    doc.setFillColor(250, 247, 244);
+    doc.roundedRect(margin, cardY, cardW, cardH, 2, 2, "F");
+    doc.setFillColor(255, 247, 238);
+    doc.roundedRect(margin + cardW + gap, cardY, cardW, cardH, 2, 2, "F");
+    doc.setTextColor(...burgundy);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.text("BILL TO", margin + 4, cardY + 6);
+    doc.text("PAYMENT DETAILS", margin + cardW + gap + 4, cardY + 6);
+
+    doc.setTextColor(...ink);
+    doc.setFontSize(10);
+    doc.text(String(customer.name || "").slice(0, 36), margin + 4, cardY + 12);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text("Phone: " + String(customer.phone || "").slice(0, 24), margin + 4, cardY + 18);
+    doc.text("Delivery: " + String(customer.location || "").slice(0, 32), margin + 4, cardY + 23);
+    const addressLines = doc.splitTextToSize(String(customer.address || ""), cardW - 8).slice(0, 2);
+    if (addressLines.length) doc.text(addressLines, margin + 4, cardY + 27);
+
+    const payX = margin + cardW + gap + 4;
+    doc.text("Mode: UPI", payX, cardY + 12);
+    doc.text("Bill Date: " + dateLabel, payX, cardY + 18);
+    doc.text("Total Items: " + totalItems, payX, cardY + 23);
+    doc.setTextColor(180, 70, 25);
+    doc.setFont("helvetica", "bold");
+    doc.text("Payment Status: PENDING", payX, cardY + 27);
+
+    // Item table
+    doc.autoTable({
+        startY: 81,
+        margin: { left: margin, right: margin },
+        head: [["#", "ITEM DESCRIPTION", "QTY", "RATE", "AMOUNT"]],
+        body: invoiceLines.map((line, index) => [
+            String(index + 1),
+            line.name,
+            String(line.qty),
+            "Rs. " + Number(line.rate).toLocaleString("en-IN"),
+            "Rs. " + Number(line.amount).toLocaleString("en-IN")
+        ]),
+        theme: "grid",
+        styles: {
+            font: "helvetica",
+            fontSize: 8,
+            cellPadding: 2.7,
+            textColor: ink,
+            lineColor: [225, 225, 230],
+            lineWidth: 0.15,
+            overflow: "linebreak"
+        },
+        headStyles: {
+            fillColor: ink,
+            textColor: [255, 255, 255],
+            fontStyle: "bold",
+            fontSize: 7.5
+        },
+        alternateRowStyles: { fillColor: [250, 250, 247] },
+        columnStyles: {
+            0: { cellWidth: 8, halign: "center" },
+            1: { cellWidth: "auto" },
+            2: { cellWidth: 13, halign: "center" },
+            3: { cellWidth: 25, halign: "right" },
+            4: { cellWidth: 28, halign: "right" }
+        }
+    });
+
+    let y = doc.lastAutoTable.finalY + 8;
+    if (y > 218) {
+        doc.addPage();
+        y = 18;
+    }
+
+    doc.setTextColor(...muted);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text("Subtotal", pageWidth - 65, y);
+    doc.text(rupees(grandTotal), pageWidth - margin, y, { align: "right" });
+    y += 7;
+    doc.setFillColor(...burgundy);
+    doc.roundedRect(pageWidth - 91, y - 1, 77, 13, 2, 2, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text("GRAND TOTAL", pageWidth - 86, y + 7);
+    doc.setTextColor(255, 224, 164);
+    doc.setFontSize(12);
+    doc.text(rupees(grandTotal), pageWidth - margin - 3, y + 7, { align: "right" });
+    y += 13;
+
+    // Amount in words
+    if (y > 242) {
+        doc.addPage();
+        y = 18;
+    }
+    doc.setFillColor(255, 244, 204);
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 10, 2, 2, "F");
+    doc.setTextColor(120, 65, 25);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.text("AMOUNT IN WORDS:", margin + 4, y + 6);
+    doc.setFont("helvetica", "normal");
+    doc.text(amountInWordsIndian(grandTotal), margin + 35, y + 6);
+    y += 16;
+
+    // UPI payment details (QR scanner removed)
+    if (y > 232) {
+        doc.addPage();
+        y = 18;
+    }
+    const payBoxH = 47;
+    doc.setFillColor(255, 247, 240);
+    doc.setDrawColor(190, 105, 35);
+    doc.setLineWidth(0.6);
+    doc.roundedRect(margin, y, pageWidth - margin * 2, payBoxH, 3, 3, "FD");
+    doc.setTextColor(160, 75, 20);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text("PAY VIA UPI", margin + 6, y + 8);
+    doc.setTextColor(...ink);
+    doc.setFontSize(12);
+    doc.text(ANUGRAHA_PAYMENT.payee.toUpperCase(), margin + 6, y + 15);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text("UPI ID: " + ANUGRAHA_PAYMENT.upiId, margin + 6, y + 22);
+    doc.text("Bank: " + ANUGRAHA_PAYMENT.bank, margin + 6, y + 28);
+    doc.setTextColor(...muted);
+    doc.setFontSize(8);
+    doc.text("Amount to pay: " + rupees(grandTotal), margin + 6, y + 35);
+    doc.text("Pay using this UPI ID in your preferred UPI app.", margin + 6, y + 41);
+    y += payBoxH + 8;
+
+    // Terms and footer
+    if (y > 258) {
+        doc.addPage();
+        y = 18;
+    }
+    doc.setTextColor(...ink);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.text("TERMS & CONDITIONS", margin, y);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...muted);
+    doc.setFontSize(7.5);
+    const terms = [
+        "Please verify all items and quantities at the time of delivery.",
+        "Crackers are non-returnable and non-refundable once delivered.",
+        "Store in a cool, dry place away from heat and flames.",
+        "Use fireworks only in open areas and follow local safety instructions."
+    ];
+    doc.text(terms.map(t => "\u2022 " + t), margin, y + 6);
+    const footerY = Math.min(y + 27, 282);
+    doc.setDrawColor(...gold);
+    doc.setLineWidth(0.8);
+    doc.line(margin, footerY, pageWidth - margin, footerY);
+    doc.setTextColor(...burgundy);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("Thank you for your order!", margin, footerY + 8);
+    doc.setTextColor(...muted);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text("For queries, WhatsApp us at " + ANUGRAHA_PAYMENT.phone + ".", margin, footerY + 14);
+    doc.setTextColor(...burgundy);
+    doc.setFont("helvetica", "bold");
+    doc.text("HAPPY DIWALI", pageWidth - margin, footerY + 8, { align: "right" });
+    doc.setTextColor(...muted);
+    doc.setFont("helvetica", "normal");
+    doc.text("Celebrate safely with ANUGRAHA CRACKERS", pageWidth - margin, footerY + 14, { align: "right" });
+
+    // Page numbers
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let page = 1; page <= pageCount; page++) {
+        doc.setPage(page);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        doc.setTextColor(125, 125, 130);
+        doc.text(`Page ${page} of ${pageCount}`, pageWidth - margin, 291, { align: "right" });
+    }
+
+    const pdfBlob = doc.output("blob");
+    return { blob: pdfBlob, fileName: `${invoiceNo}.pdf` };
+}
+
+
+async function orderWhatsApp() {
 
     if (cart.length === 0) {
         alert("Your cart is empty!");
@@ -1343,24 +1684,80 @@ function orderWhatsApp() {
     message += "Thank you! 🙏";
 
 
-    // WHATSAPP
+    // Open a WhatsApp tab immediately during the user's click. This avoids
+    // popup blockers after the asynchronous PDF generation finishes.
+    // The tab is navigated to the prefilled order message after the PDF downloads.
+    const whatsappTab = window.open("about:blank", "_blank");
 
-    const whatsappNumber =
-        "919449683125";
+    // GENERATE A PDF INVOICE BEFORE OPENING WHATSAPP.
+    // Payment remains pending until the seller verifies receipt.
+    const invoiceNo = anugrahaInvoiceNumber();
+    const invoiceLines = cart.map(item => {
+        const product = products.find(product => product.id === item.id);
+        if (!product) return null;
+        const unitPrice = product.offerPrice !== null
+            ? Number(product.offerPrice)
+            : Number(product.actualPrice);
+        return {
+            name: String(product.name || "Cracker item"),
+            qty: Number(item.quantity) || 0,
+            rate: unitPrice,
+            amount: unitPrice * (Number(item.quantity) || 0)
+        };
+    }).filter(Boolean);
 
+    if (!invoiceLines.length) {
+        alert("We couldn't build the invoice because no valid products were found.");
+        return;
+    }
 
-    const whatsappURL =
-        "https://wa.me/" +
-        whatsappNumber +
-        "?text=" +
-        encodeURIComponent(message);
+    // Include invoice reference in the WhatsApp message.
+    message = `Invoice Reference: ${invoiceNo}\n` + message;
+    message += `\nPayment UPI: ${ANUGRAHA_PAYMENT.upiId}\n`;
+    message += "Payment Status: Pending until receipt is verified.\n";
 
+    const invoiceFileResult = await buildAnugrahaInvoicePDF({
+        name: customerName,
+        phone: customerPhone,
+        location: customerLocation,
+        address: customerAddress
+    }, invoiceLines, grandTotal, invoiceNo);
 
-    window.open(
-        whatsappURL,
-        "_blank"
-    );
+    if (!invoiceFileResult) return;
 
+    const invoiceFile = new File([invoiceFileResult.blob], invoiceFileResult.fileName, {
+        type: "application/pdf"
+    });
+
+    // Always download the invoice first, then open WhatsApp Business with the
+    // customer/order details prefilled. WhatsApp's normal wa.me link cannot
+    // attach a PDF automatically; the downloaded PDF must be attached in chat.
+    const whatsappNumber = "919449683125";
+    const whatsappURL = "https://wa.me/" + whatsappNumber + "?text=" + encodeURIComponent(message);
+
+    try {
+        const url = URL.createObjectURL(invoiceFileResult.blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = invoiceFileResult.fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+        if (whatsappTab && !whatsappTab.closed) {
+            whatsappTab.location.href = whatsappURL;
+        } else {
+            window.location.href = whatsappURL;
+        }
+
+        alert("Invoice PDF downloaded. WhatsApp Business is opening with the order details filled in. Please attach the downloaded PDF to the chat before sending the order.");
+    } catch (error) {
+        console.error("Could not prepare invoice download or WhatsApp order:", error);
+        if (whatsappTab && !whatsappTab.closed) whatsappTab.location.href = whatsappURL;
+        else window.open(whatsappURL, "_blank");
+        alert("WhatsApp will open with the order details. If the invoice did not download, use the invoice download option and attach the PDF before sending.");
+    }
 }
 
 

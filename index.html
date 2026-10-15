@@ -1100,11 +1100,15 @@
                     </div>
 
 
+                    <p class="invoice-payment-note">
+                        📄 Your invoice PDF will download automatically. Pay using the UPI ID shown on the invoice.
+                        Payment remains pending until receipt is verified.
+                    </p>
                     <button
                         onclick="orderWhatsApp()"
                         class="order-button"
                     >
-                        💬 ORDER ON WHATSAPP
+                        📄 INVOICE PDF + ORDER ON WHATSAPP
                     </button>
 
                 </div>
@@ -1204,7 +1208,9 @@
     </div>
 
 
-    <script src="script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" defer></script>
+<script src="script.js" defer></script>
 
     <!-- FLOATING WHATSAPP BUTTON -->
 <a

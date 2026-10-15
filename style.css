@@ -8613,3 +8613,18 @@ button:active,
         overflow: visible !important;
     }
 }
+
+
+/* =========================================
+   INVOICE / UPI CHECKOUT NOTE
+   ========================================= */
+.invoice-payment-note {
+    margin: 12px 0;
+    padding: 11px 12px;
+    border: 1px solid #f0d6a5;
+    border-radius: 8px;
+    background: #fff8e8;
+    color: #6d4b1f;
+    font-size: 12px;
+    line-height: 1.5;
+}
